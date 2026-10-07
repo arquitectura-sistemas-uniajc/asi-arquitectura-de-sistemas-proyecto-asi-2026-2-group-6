@@ -1,131 +1,200 @@
-## 1. ¿Qué duele hoy? (Contexto y Problema)
+# Retos arquitectónicos de GestiónPyme
 
-GestiónPyme está dirigido a una pequeña empresa que necesita realizar y
-controlar operaciones fundamentales del negocio: facturación, inventario y
-reportes contables.
+## 1. ¿Por qué NO microservicios?
 
-El principal problema es que estas operaciones son críticas para el
-funcionamiento diario de la empresa, pero la organización cuenta con un
-presupuesto muy limitado y no dispone de personal especializado en sistemas.
+Para GestiónPyme se propone utilizar una arquitectura de **monolito modular** en lugar de una arquitectura basada en microservicios.
 
-Esto genera los siguientes problemas:
+La principal razón es que el proyecto está orientado a una pequeña empresa con un **presupuesto muy limitado**, una cantidad de funcionalidades definida y un equipo de desarrollo de **3 integrantes**. En este contexto, utilizar microservicios introduciría una complejidad técnica y operativa que no se encuentra justificada por las necesidades actuales del sistema.
 
-- La facturación debe estar disponible durante la operación diaria del negocio.
-- Las ventas realizadas deben quedar registradas correctamente para evitar
-  pérdidas de información.
-- El inventario debe mantenerse actualizado después de las operaciones de
-  venta.
-- El contador necesita disponer de la información necesaria para generar el
-  reporte mensual.
-- Un reporte mensual pesado no puede afectar ni ralentizar las operaciones
-  normales de facturación.
-- La empresa necesita una solución sencilla de mantener, debido a que no
-  cuenta con personal de sistemas.
-- La pérdida de una factura representa un problema importante para el negocio,
-  por lo que la información de facturación debe ser persistente y recuperable.
+Un monolito modular permite mantener una arquitectura sencilla de desarrollar, desplegar, monitorear y mantener, separando internamente las responsabilidades del sistema sin necesidad de convertir cada funcionalidad en un servicio independiente.
 
-El problema arquitectónico principal no es tener muchas funcionalidades, sino
-garantizar que las operaciones críticas del negocio continúen funcionando
-mientras se realizan procesos más pesados, como la generación del reporte
-mensual.
+### Problemas que se evitan al no utilizar microservicios
 
+- Mayor cantidad de componentes que administrar.
+- Mayor complejidad en los despliegues.
+- Comunicación entre diferentes servicios.
+- Mayor dificultad para monitorear y diagnosticar fallos.
+- Mayor complejidad para manejar errores de comunicación.
+- Incremento potencial de los costos de infraestructura.
+- Mayor carga de mantenimiento para un equipo pequeño.
+- Necesidad de administrar diferentes servicios cuando el sistema no requiere actualmente ese nivel de distribución.
 
-## 2. ¿Quién sufre ese dolor?
+En cambio, el **monolito modular** permite organizar el sistema en módulos con responsabilidades claramente definidas, por ejemplo:
 
-Los principales usuarios afectados por el problema son:
+- Gestión de productos.
+- Facturación.
+- Inventario.
+- Auditoría.
+- Reportes.
 
-### Administrador
+Estos módulos pueden mantenerse separados a nivel lógico sin necesidad de desplegarlos como aplicaciones independientes.
 
-Es responsable de controlar la operación general de la empresa y necesita
-disponer de información confiable sobre los productos, las ventas y el
-inventario.
+### Costo y tamaño del equipo
 
-Un problema en el sistema puede dificultar el control de las operaciones
-diarias y la consulta de información del negocio.
+El proyecto cuenta con **3 integrantes**, por lo que la complejidad operativa debe mantenerse acorde con la capacidad del equipo.
 
-### Vendedores
+Además, el proyecto establece que la empresa tiene un **presupuesto muy limitado** y no dispone de una persona especializada en sistemas. Por esta razón, agregar múltiples servicios, infraestructura y mecanismos de comunicación entre ellos aumentaría los costos y la dificultad de mantenimiento.
 
-Son los usuarios que realizan las operaciones de venta y emisión de facturas.
+No se establece en el enunciado un valor monetario concreto para comparar ambas arquitecturas, por lo que **no se debe inventar un costo exacto**. Estos valores deberán calcularse posteriormente a partir de la infraestructura seleccionada y los costos reales de operación.
 
-Para ellos, la disponibilidad del sistema es especialmente importante porque
-una caída puede impedir registrar y emitir nuevas facturas durante la operación
-comercial.
+### Conclusión
 
-### Contador
+La decisión de no utilizar microservicios se basa en que **la complejidad adicional no se justifica para el tamaño del proyecto, el tamaño del equipo y las restricciones económicas de la empresa**.
 
-Necesita la información generada por las operaciones del negocio para realizar
-el control y los reportes contables.
+Por lo tanto, GestiónPyme utilizará un **monolito modular**, buscando obtener una solución sencilla, mantenible y suficiente para cumplir los requisitos del negocio.
 
-Un problema con la disponibilidad o integridad de la información puede afectar
-la generación del reporte mensual y la confiabilidad de los datos contables.
+## 2. ¿Cómo aíslan el reporte pesado para que no bloquee la operación diaria?
 
-### Resumen de afectados
+Uno de los principales retos arquitectónicos de GestiónPyme es la generación del **reporte mensual**, debido a que esta operación puede requerir una cantidad considerable de procesamiento y consultas sobre la información almacenada.
 
-| Usuario | Principal necesidad | Impacto ante un problema |
-|---|---|---|
-| Administrador | Controlar productos, ventas e inventario | Pierde visibilidad sobre la operación |
-| Vendedor | Registrar ventas y emitir facturas | No puede realizar normalmente las ventas |
-| Contador | Consultar información y generar reportes | Se dificulta el trabajo contable |
+El sistema debe permitir que el reporte mensual se genere sin afectar las operaciones críticas que se realizan diariamente, especialmente la **facturación y la actualización del inventario**.
 
-Por lo tanto, aunque los tres perfiles utilizan el sistema de manera
-diferente, todos dependen de que la información sea consistente y esté
-disponible.
+El objetivo es evitar que una operación pesada consuma todos los recursos disponibles y provoque que los vendedores tengan problemas para registrar nuevas ventas o emitir facturas.
 
+### Separación de la operación diaria
 
-## 3. ¿Qué pasa si el sistema se cae una hora? (Disponibilidad)
+La arquitectura propuesta debe separar el procesamiento del reporte de las operaciones normales del sistema.
 
-Una caída de una hora afecta directamente la operación diaria de la empresa,
-debido a que la facturación y el control del inventario son procesos
-fundamentales del negocio.
+Para esto, la generación del reporte puede manejarse como un **trabajo independiente**, utilizando mecanismos como una cola de trabajos y Redis para evitar que el procesamiento pesado bloquee directamente las solicitudes normales de los usuarios.
 
-Durante esa hora:
+El flujo sería aproximadamente:
 
-- Los vendedores podrían quedar imposibilitados para emitir nuevas facturas
-  desde el sistema.
-- Las ventas que se realicen durante la caída podrían quedar pendientes de
-  registrar.
-- El inventario podría quedar temporalmente desactualizado.
-- El administrador perdería temporalmente la capacidad de consultar el estado
-  de las operaciones.
-- El contador no tendría acceso normal a la información generada durante ese
-  periodo.
-- Al restablecerse el sistema, las operaciones pendientes tendrían que
-  recuperarse sin generar duplicados ni pérdida de información.
+    Usuario solicita reporte
+            ↓
+    Se registra la solicitud
+            ↓
+    Trabajo de generación del reporte
+            ↓
+    Procesamiento independiente
+            ↓
+    Reporte generado
 
-### El problema más grave: las facturas
+Mientras este proceso se ejecuta, las operaciones normales pueden continuar:
 
-La caída del sistema no debe provocar la pérdida de las facturas que ya fueron
-registradas.
+    Vendedor
+       ↓
+    Facturación
+       ↓
+    Actualización de inventario
 
-Por esta razón, el objetivo no debe ser únicamente volver a levantar el
-sistema, sino garantizar que las operaciones confirmadas antes de la caída
-permanezcan almacenadas y puedan recuperarse correctamente.
+De esta manera, la generación del reporte no debe detener la operación diaria.
 
-### Impacto de una hora de indisponibilidad
+### Optimización de las consultas
 
-La pérdida económica exacta de una hora todavía no puede establecerse porque
-el enunciado del proyecto no proporciona el número de ventas promedio por hora
-ni el valor promedio de cada factura.
+Además de separar el procesamiento, las consultas utilizadas para generar los reportes deberán optimizarse para reducir el impacto sobre la base de datos.
 
-Por lo tanto, no se debe inventar un valor monetario. Para calcularlo
-posteriormente se necesitarán datos como:
+Se podrán utilizar mecanismos como:
 
-- Ventas promedio por hora.
-- Valor promedio de una factura.
-- Número promedio de facturas emitidas por hora.
-- Horario de operación de la empresa.
+- Consultas optimizadas.
+- Índices adecuados.
+- Redis para almacenar o reutilizar información cuyo cálculo resulte costoso.
+- Procesamiento independiente de la solicitud del usuario.
+- Control de los recursos utilizados por la generación del reporte.
 
-Con esos datos podremos estimar cuánto dinero está potencialmente en riesgo
-durante una hora de indisponibilidad.
+La solución definitiva se determinará durante el desarrollo y las pruebas del proyecto.
+
+### ¿Cómo se demuestra?
+
+Esta decisión no debe quedarse solamente como una explicación teórica.
+
+Se realizarán **pruebas de carga** para comparar el comportamiento del sistema bajo diferentes condiciones:
+
+- Operación normal de facturación.
+- Generación simultánea del reporte mensual.
+- Operación de facturación mientras se ejecutan procesos pesados.
+
+Se deberán medir aspectos como:
+
+- Tiempo de respuesta.
+- Cantidad de solicitudes procesadas.
+- Uso de CPU.
+- Uso de memoria.
+- Comportamiento de la API.
+- Tiempo necesario para generar el reporte.
+
+El objetivo será demostrar mediante mediciones que la generación del reporte mensual **no degrada de manera inaceptable las operaciones críticas de facturación e inventario**.
+
+### Conclusión
+
+GestiónPyme mantendrá un **monolito modular**, pero aislará el procesamiento pesado del reporte mediante mecanismos de ejecución independiente, optimización de consultas y utilización de Redis cuando corresponda.
+
+La efectividad de esta decisión será comprobada mediante pruebas de carga y métricas obtenidas durante el funcionamiento del sistema.
+
+## 3. El negocio no puede perder ninguna factura. ¿Cuál es su pérdida máxima de datos y cómo la demuestran?
+
+Para GestiónPyme, la información relacionada con las facturas es crítica para el funcionamiento del negocio.
+
+El proyecto establece que **el negocio no puede perder ninguna factura**, por lo que la arquitectura debe garantizar que las facturas que hayan sido registradas correctamente puedan recuperarse ante una falla.
 
 ### Pérdida máxima de datos
 
-Para GestiónPyme, el objetivo es que una factura confirmada no se pierda.
+La pérdida máxima aceptable para las facturas confirmadas es:
+
+**Pérdida máxima: 0 facturas.**
+
+Esto significa que una factura que haya sido confirmada y almacenada correctamente no debe desaparecer como consecuencia de una falla del sistema.
+
+En términos de recuperación de datos, el objetivo será trabajar con un **RPO de 0 para las facturas confirmadas**.
+
+### ¿Cómo se garantiza?
+
+La información de facturación deberá almacenarse en una base de datos con **persistencia**, evitando que los datos dependan únicamente de los componentes temporales de la aplicación.
+
+Para esto se utilizará PostgreSQL con almacenamiento persistente.
+
+Además, se implementarán mecanismos de:
+
+- Persistencia de la información.
+- Respaldo de la base de datos.
+- Restauración de los respaldos.
+- Verificación de la información después de una recuperación.
+- Registro de las operaciones necesarias para mantener la trazabilidad de las facturas.
+
+El objetivo no es solamente crear un respaldo, sino demostrar que dicho respaldo puede utilizarse efectivamente para recuperar la información.
+
+### ¿Cómo se demuestra?
+
+Se realizará una prueba controlada de recuperación.
+
+El procedimiento será:
+
+    1. Registrar facturas de prueba
+              ↓
+    2. Confirmar que fueron almacenadas
+              ↓
+    3. Realizar el respaldo correspondiente
+              ↓
+    4. Simular una falla o pérdida del componente
+              ↓
+    5. Restaurar la información
+              ↓
+    6. Verificar las facturas
+
+Después de la restauración se comprobará que las facturas registradas antes de la falla continúan disponibles y que su información permanece íntegra.
+
+La evidencia deberá incluir:
+
+- Facturas existentes antes de la prueba.
+- Respaldo realizado.
+- Procedimiento de recuperación.
+- Restauración de PostgreSQL.
+- Facturas disponibles después de la recuperación.
+- Comparación de los datos antes y después de la falla.
+
+### Resultado esperado
+
+La prueba deberá demostrar que:
+
+    Facturas confirmadas antes de la falla
+                        =
+    Facturas recuperadas después de la recuperación
 
 Por lo tanto:
 
-**Pérdida máxima aceptable de facturas: 0 facturas.**
+**Pérdida máxima aceptable de facturas = 0.**
 
-La arquitectura deberá demostrar mediante mecanismos de persistencia,
-respaldo y recuperación que una factura registrada no desaparece ante una
-falla del sistema.
+### Conclusión
+
+La arquitectura de GestiónPyme debe priorizar la **integridad y recuperación de la información de facturación**.
+
+No será suficiente afirmar que existen copias de seguridad. El proyecto deberá demostrar mediante una prueba reproducible que, ante una falla, las facturas confirmadas pueden recuperarse correctamente y que la pérdida de información es de **0 facturas**.
