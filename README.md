@@ -1,6 +1,7 @@
 # ASI-2026-Repo - GestionPyme
 # Jason Steven Caicedo Correa
 # Kevin Landazury Guerrero
+# yeiler alvarez rodriguez
 ## Configuración de AWS
 - **Región de trabajo:** us-east-1 (N. Virginia)
 - **Política de etiquetado obligatoria:**
