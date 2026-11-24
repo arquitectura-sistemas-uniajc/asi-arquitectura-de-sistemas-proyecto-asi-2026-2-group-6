@@ -1,0 +1,25 @@
+{
+  "grupo": 6,
+  "slug": "gestionpyme",
+  "nombre": "GestiónPyme",
+  "dominio": "Facturación e inventario para una pyme",
+  "lema": "Facturar sin que el reporte del mes frene la caja.",
+  "color": "#3d5a80",
+  "recurso": {
+    "plural": "Productos",
+    "singular": "Producto",
+    "nombre": "Producto",
+    "detalle": "Bodega y precio",
+    "categoria": "Línea",
+    "cantidad": "Unidades"
+  },
+  "accion": {
+    "boton": "Facturar",
+    "plural": "Facturas",
+    "persona": "Cliente",
+    "modo": "descontar",
+    "unico": false,
+    "anonimo": false,
+    "monto": null
+  }
+}
