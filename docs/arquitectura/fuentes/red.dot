@@ -1,0 +1,47 @@
+// Plan de red de GestionPyme en AWS. Generar: dot -Tpng red.dot -o ../red.png
+digraph RED {
+  graph [rankdir=TB, fontname="DejaVu Sans", nodesep=0.5, ranksep=0.6, pad=0.4, bgcolor="white", fontsize=18, labelloc=t, compound=true,
+         label=<<B>GestiónPyme · Plan de red en AWS</B><BR/><FONT POINT-SIZE="11">Región us-east-2 (Ohio) · Una subred es pública por su ruta 0.0.0.0/0 → IGW, no por su nombre</FONT>>];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=10.5, margin="0.16,0.08", penwidth=1.3];
+  edge [fontname="DejaVu Sans", fontsize=9.5, color="#334155", fontcolor="#1e293b"];
+
+  internet [label=<<B>Internet</B><BR/>Usuarios y administrador>, shape=ellipse, fillcolor="#f1f5f9", color="#64748b"];
+
+  subgraph cluster_vpc {
+    label=<<B>VPC gestionpyme-vpc · 10.0.0.0/16</B>>; style="rounded"; color="#16425b"; penwidth=2; fontsize=12; margin=16;
+    igw [label=<<B>Internet Gateway</B><BR/>gestionpyme-igw>, fillcolor="#fde68a", color="#b45309"];
+
+    subgraph cluster_pub {
+      label=<<B>Subred pública · 10.0.0.0/20 · us-east-2a</B><BR/><FONT POINT-SIZE="9">Tabla gestionpyme-rtb-public: 10.0.0.0/16 → local · 0.0.0.0/0 → IGW</FONT>>;
+      style="rounded,filled"; fillcolor="#ecfdf5"; color="#059669"; fontsize=11; margin=14;
+
+      subgraph cluster_sg {
+        label=<<B>Grupo de seguridad gestionpyme-web-sg</B><BR/><FONT POINT-SIZE="9">Entrada: 80/TCP desde 0.0.0.0/0 · 22/TCP solo IP admin /32 · nada más</FONT>>;
+        style="rounded,dashed"; color="#dc2626"; fontsize=10.5; margin=12;
+
+        subgraph cluster_ec2 {
+          label=<<B>EC2 gestionpyme-web</B> · t3.micro · Ubuntu 24.04 · IP privada 10.0.3.56 + IP pública>;
+          style="rounded,filled"; fillcolor="white"; color="#334155"; fontsize=10.5; margin=12;
+
+          proxy [label=<<B>proxy</B> · Nginx<BR/><FONT POINT-SIZE="9">redes: publica + aplicacion<BR/>publica 80 → 80</FONT>>, fillcolor="#2f6690", fontcolor="white", color="#2f6690"];
+          api   [label=<<B>api</B> · Node.js<BR/><FONT POINT-SIZE="9">redes: aplicacion + datos<BR/>3000 SIN publicar</FONT>>, fillcolor="#2f6690", fontcolor="white", color="#2f6690"];
+          db    [label=<<B>db</B> · PostgreSQL 17<BR/><FONT POINT-SIZE="9">red: datos<BR/>5432 SIN publicar</FONT>>, shape=cylinder, fillcolor="#16425b", fontcolor="white", color="#16425b"];
+        }
+      }
+    }
+
+    subgraph cluster_priv {
+      label=<<B>Subred privada · 10.0.128.0/20 · us-east-2a</B><BR/><FONT POINT-SIZE="9">Tabla gestionpyme-rtb-private1: solo 10.0.0.0/16 → local (sin ruta a internet)</FONT>>;
+      style="rounded,filled"; fillcolor="#eff6ff"; color="#2563eb"; fontsize=11; margin=14;
+      reservada [label=<Reservada para mover la base<BR/>(RDS) si crece el presupuesto<BR/><FONT POINT-SIZE="9">ADR-004 · vacía hoy</FONT>>, fillcolor="white", color="#93c5fd", style="rounded,filled,dashed"];
+    }
+  }
+
+  internet -> igw [label="HTTP 80 / SSH 22"];
+  igw -> proxy [label="80/TCP (permitido)", color="#059669", fontcolor="#047857", penwidth=1.6];
+  proxy -> api [label="HTTP :3000\nred Docker interna"];
+  api -> db [label="TCP 5432\nred Docker interna"];
+  igw -> api [label="3000 ✗ bloqueado\n(SG + no publicado)", style=dashed, color="#dc2626", fontcolor="#b91c1c", arrowhead=tee];
+  igw -> db  [label="5432 ✗ bloqueado\n(SG + no publicado)", style=dashed, color="#dc2626", fontcolor="#b91c1c", arrowhead=tee];
+  db -> reservada [style=invis];
+}
