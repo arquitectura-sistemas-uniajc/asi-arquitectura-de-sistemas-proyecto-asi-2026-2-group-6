@@ -1,4 +1,4 @@
-# ADR-001 · Monolito modular en vez de microservicios
+# ADR-0001 · Monolito modular en vez de microservicios
 
 - **Estado:** aceptado
 - **Fecha:** 25-nov-2026

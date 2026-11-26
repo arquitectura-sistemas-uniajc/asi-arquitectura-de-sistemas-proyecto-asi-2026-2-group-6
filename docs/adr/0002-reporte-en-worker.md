@@ -1,4 +1,4 @@
-# ADR-002 · El reporte mensual se genera en un proceso aparte (worker con Redis)
+# ADR-0002 · El reporte mensual se genera en un proceso aparte (worker con Redis)
 
 - **Estado:** aceptado (implementación pendiente)
 - **Fecha:** 25-nov-2026

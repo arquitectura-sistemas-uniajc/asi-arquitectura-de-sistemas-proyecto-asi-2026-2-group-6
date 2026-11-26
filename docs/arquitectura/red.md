@@ -2,6 +2,8 @@
 
 ![Plan de red en AWS](red.png)
 
+Ver también el [diagrama de despliegue](despliegue.png), que muestra la EC2 y sus contenedores dentro de la VPC.
+
 > **Regla del plan:** una subred es pública **por su ruta** `0.0.0.0/0 → Internet Gateway`, no por cómo se llama. Si el plan y la consola no coinciden, se corrige el plan.
 
 ## 1. VPC y subredes
@@ -10,7 +12,7 @@
 |---|---|---|---|---|
 | VPC | `gestionpyme-vpc` | `10.0.0.0/16` (65.536 IP) | us-east-2 (Ohio) | Red propia del proyecto, con espacio para crecer |
 | Subred pública | `gestionpyme-subnet-public1-us-east-2a` | `10.0.0.0/20` (4.091 IP disponibles) | us-east-2a | **Solo** la EC2 con el proxy |
-| Subred privada | `gestionpyme-subnet-private1-us-east-2a` | `10.0.128.0/20` | us-east-2a | Reservada para la base (RDS) si se migra ([ADR-004](../adr/ADR-004-despliegue-una-ec2-compose.md)) |
+| Subred privada | `gestionpyme-subnet-private1-us-east-2a` | `10.0.128.0/20` | us-east-2a | Reservada para la base (RDS) si se migra ([ADR-0004](../adr/0004-despliegue-una-ec2-compose.md)) |
 | Internet Gateway | `gestionpyme-igw` | — | — | Salida y entrada a internet, solo de la subred pública |
 | NAT Gateway | **Ninguno** | — | — | Cobra por hora (unos 32 USD/mes); hoy no se necesita |
 
@@ -66,7 +68,7 @@ El `proxy` **no** está en la red `datos`, así que no puede hablar con la base 
 | 7 | `proxy` | `db` | 5432 | ❌ | El proxy no necesita la base | No comparten red Docker |
 | 8 | `api` | Internet | cualquiera | ❌ | La API no necesita salir | Red `aplicacion` con `internal: true` |
 | 9 | EC2 | Internet | 443 / HTTPS | ✅ | Instalar Docker y descargar imágenes | Regla de salida del SG + ruta al IGW |
-| 10 | `db` | Amazon S3 | 443 / HTTPS | ⏳ Planeado | Respaldo y WAL ([ADR-003](../adr/ADR-003-respaldo-wal-s3.md)) | Rol de IAM de la instancia |
+| 10 | `db` | Amazon S3 | 443 / HTTPS | ⏳ Planeado | Respaldo y WAL ([ADR-0003](../adr/0003-respaldo-wal-s3.md)) | Rol de IAM de la instancia |
 
 ## 6. Las dos barreras
 
@@ -82,13 +84,13 @@ La API y la base están protegidas por **dos barreras independientes**:
 
 Con las dos barreras, **un solo error de configuración no deja la base expuesta**. Es el primer control de seguridad del **RNF-05**, comprobado desde internet el 23-nov-2026 ([despliegue.md](../despliegue.md)).
 
-## 7. Fuentes de los diagramas
+## 7. Diagramas
 
-Los diagramas se generan desde texto con Graphviz, para poder editarlos:
+Los diagramas están hechos en **draw.io**. Cada uno tiene su archivo `.drawio` (editable) y, al lado, el `.png` exportado con una copia del diagrama incluida:
 
-```bash
-cd docs/arquitectura/fuentes
-dot -Tpng red.dot -o ../red.png
-dot -Tpng c4-nivel-2-contenedores.dot -o ../diagrama-contenedores-nivel-2.png
-dot -Tpng c4-nivel-3-componentes-api.dot -o ../diagrama-componentes-nivel-3.png
-```
+| Diagrama | Fuente | Imagen |
+|---|---|---|
+| Plan de red | [red.drawio](red.drawio) | [red.png](red.png) |
+| Arquitectura de despliegue | [despliegue.drawio](despliegue.drawio) | [despliegue.png](despliegue.png) |
+
+Para editarlos: abrir el `.drawio` en [diagrams.net](https://app.diagrams.net) o con la extensión *Draw.io Integration* de VS Code y volver a exportar el PNG marcando **Include a copy of my diagram**.
