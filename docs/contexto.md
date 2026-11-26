@@ -207,9 +207,9 @@ Cada reto quedó formalizado en un registro de decisión (ADR) con sus alternati
 
 | Reto | Decisión | Requisito que la mide |
 |---|---|---|
-| 1. ¿Por qué NO microservicios? | [ADR-001](adr/ADR-001-monolito-modular.md): monolito modular (21,04 vs 115,86 USD/mes; equipo de 3) | RNF-09 (costo ≤ 25 USD/mes) |
-| 2. ¿Cómo aíslan el reporte pesado? | [ADR-002](adr/ADR-002-reporte-en-worker.md): worker aparte con cola en Redis | RNF-02 (p95 de facturación < 500 ms con el reporte corriendo) |
-| 3. ¿Cuál es la pérdida máxima de facturas? | [ADR-003](adr/ADR-003-respaldo-wal-s3.md): respaldo diario + WAL continuo en S3 | RNF-06 y RNF-07 |
+| 1. ¿Por qué NO microservicios? | [ADR-0001](adr/0001-monolito-modular.md): monolito modular (21,04 vs 115,86 USD/mes; equipo de 3) | RNF-09 (costo ≤ 25 USD/mes) |
+| 2. ¿Cómo aíslan el reporte pesado? | [ADR-0002](adr/0002-reporte-en-worker.md): worker aparte con cola en Redis | RNF-02 (p95 de facturación < 500 ms con el reporte corriendo) |
+| 3. ¿Cuál es la pérdida máxima de facturas? | [ADR-0003](adr/0003-respaldo-wal-s3.md): respaldo diario + WAL continuo en S3 | RNF-06 y RNF-07 |
 
 **Precisión sobre la pérdida máxima (sección 3).** Al cuantificarla se separaron dos escenarios:
 
@@ -218,4 +218,4 @@ Cada reto quedó formalizado en un registro de decisión (ADR) con sus alternati
 | Se caen o reinician los contenedores (`api`, `db`) | **0 facturas confirmadas** (RNF-06) | La factura se confirma con `COMMIT` y queda en el volumen persistente |
 | Se pierde **todo** el servidor EC2 | **Hasta 5 minutos de facturas** (RPO, RNF-07) | El WAL se archiva en S3 cada 5 minutos como máximo |
 
-Llegar a 0 facturas perdidas también en el segundo escenario exige una base replicada en otra máquina (RDS Multi-AZ o una réplica síncrona), lo que supera el techo de 25 USD/mes. Es un **riesgo reconocido y asumido**, y el ADR-003 indica en qué condiciones se revierte.
+Llegar a 0 facturas perdidas también en el segundo escenario exige una base replicada en otra máquina (RDS Multi-AZ o una réplica síncrona), lo que supera el techo de 25 USD/mes. Es un **riesgo reconocido y asumido**, y el ADR-0003 indica en qué condiciones se revierte.

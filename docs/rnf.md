@@ -33,12 +33,12 @@ Cada RNF tiene **atributo, métrica, umbral, condición de carga y forma de veri
 | ID | Estado | Evidencia o momento |
 |---|---|---|
 | RNF-01 | Pendiente | Hito 3: prueba de carga |
-| RNF-02 | Pendiente | Requiere el worker de reportes ([ADR-002](adr/ADR-002-reporte-en-worker.md)) |
+| RNF-02 | Pendiente | Requiere el worker de reportes ([ADR-0002](adr/0002-reporte-en-worker.md)) |
 | RNF-03 | Pendiente | Monitor de `/api/health` (hito 3) |
 | RNF-04 | Pendiente | Requiere 2 réplicas de la API detrás de Nginx |
 | RNF-05 | **Parcial** | ✅ 0 puertos internos expuestos (verificado el 23-nov, [despliegue.md](despliegue.md)) · ✅ `.env` fuera del repositorio · ✅ API sin usuario root · ⏳ escaneo de imagen, autenticación y TLS |
 | RNF-06 | Pendiente | Prueba de fallo inyectado (hito 2) |
-| RNF-07 | Pendiente | Prueba de respaldo y restauración ([ADR-003](adr/ADR-003-respaldo-wal-s3.md)) |
+| RNF-07 | Pendiente | Prueba de respaldo y restauración ([ADR-0003](adr/0003-respaldo-wal-s3.md)) |
 | RNF-08 | Pendiente | Hito 3: observabilidad |
 | RNF-09 | Estimado: **21,04 USD/mes** | [Cotización AWS, Opción A](estimacion/cotizacion-aws-gestionpyme.pdf) |
 
@@ -57,7 +57,7 @@ Cada RNF tiene **atributo, métrica, umbral, condición de carga y forma de veri
 - **Escenario:** cierre de mes. El contador lanza el reporte mensual y, al mismo tiempo, 20 vendedores facturan.
 - **Umbral:** p95 de `POST /api/registros` < 500 ms y menos del 1 % de solicitudes con error.
 - **Verificación:** la misma prueba de k6 **sin** reporte y **con** el reporte corriendo en paralelo. Con reporte, el p95 debe seguir dentro del umbral.
-- **Es el reto central del proyecto.** Lo resuelve el [ADR-002](adr/ADR-002-reporte-en-worker.md).
+- **Es el reto central del proyecto.** Lo resuelve el [ADR-0002](adr/0002-reporte-en-worker.md).
 
 ### RNF-03 · Disponibilidad
 
@@ -105,9 +105,9 @@ Cada RNF tiene **atributo, métrica, umbral, condición de carga y forma de veri
 ### RNF-07 · Recuperación ante la pérdida total del servidor
 
 - **Umbral:** RTO ≤ 1 hora (tiempo hasta volver a facturar) y RPO ≤ 5 minutos (máximo de facturas perdidas).
-- **Cómo se cumple:** respaldo base diario y archivado continuo del WAL de PostgreSQL en S3 ([ADR-003](adr/ADR-003-respaldo-wal-s3.md)).
+- **Cómo se cumple:** respaldo base diario y archivado continuo del WAL de PostgreSQL en S3 ([ADR-0003](adr/0003-respaldo-wal-s3.md)).
 - **Verificación:** terminar la instancia, crear una nueva, restaurar desde S3, cronometrar y comparar las facturas antes y después.
-- **Riesgo asumido:** ante la pérdida **total** del servidor se pueden perder hasta 5 minutos de facturas. Llegar a 0 en ese escenario exige una base replicada en otra máquina, y eso supera el techo de costo (RNF-09). Está justificado en el ADR-003.
+- **Riesgo asumido:** ante la pérdida **total** del servidor se pueden perder hasta 5 minutos de facturas. Llegar a 0 en ese escenario exige una base replicada en otra máquina, y eso supera el techo de costo (RNF-09). Está justificado en el ADR-0003.
 
 ### RNF-08 · Observabilidad
 
@@ -118,7 +118,7 @@ Cada RNF tiene **atributo, métrica, umbral, condición de carga y forma de veri
 ### RNF-09 · Costo
 
 - **Umbral:** techo de **25 USD al mes** en operación normal.
-- **Estimación actual:** 21,04 USD/mes con la Opción A (todo en una instancia). La Opción B (servicios gestionados) cuesta 115,86 USD/mes y queda descartada ([ADR-004](adr/ADR-004-despliegue-una-ec2-compose.md)).
+- **Estimación actual:** 21,04 USD/mes con la Opción A (todo en una instancia). La Opción B (servicios gestionados) cuesta 115,86 USD/mes y queda descartada ([ADR-0004](adr/0004-despliegue-una-ec2-compose.md)).
 - **Verificación:** AWS Pricing Calculator ([cotización](estimacion/cotizacion-aws-gestionpyme.pdf)) y la factura real en *Billing* durante el semestre.
 
 ---

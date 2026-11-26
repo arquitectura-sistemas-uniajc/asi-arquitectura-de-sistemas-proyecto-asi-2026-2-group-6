@@ -1,4 +1,4 @@
-# ADR-004 · Desplegar todo en una EC2 con Docker Compose en vez de servicios gestionados
+# ADR-0004 · Desplegar todo en una EC2 con Docker Compose en vez de servicios gestionados
 
 - **Estado:** aceptado
 - **Fecha:** 25-nov-2026
@@ -32,7 +32,7 @@ Hay que publicar GestiónPyme en AWS cumpliendo el costo (RNF-09), el aislamient
 
 ## Consecuencias aceptadas
 
-- **Un solo punto de falla:** si la instancia cae, cae todo. Se mitiga con el respaldo del [ADR-003](ADR-003-respaldo-wal-s3.md), que da un RTO ≤ 1 h.
+- **Un solo punto de falla:** si la instancia cae, cae todo. Se mitiga con el respaldo del [ADR-0003](0003-respaldo-wal-s3.md), que da un RTO ≤ 1 h.
 - El equipo administra el servidor: parches de Ubuntu, Docker y espacio en disco.
 - La subred privada queda creada pero vacía, reservada para mover la base allí si el presupuesto lo permite.
 

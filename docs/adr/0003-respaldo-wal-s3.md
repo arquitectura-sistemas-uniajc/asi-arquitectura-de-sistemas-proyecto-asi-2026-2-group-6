@@ -1,4 +1,4 @@
-# ADR-003 · Respaldo de PostgreSQL con archivado continuo del WAL en S3
+# ADR-0003 · Respaldo de PostgreSQL con archivado continuo del WAL en S3
 
 - **Estado:** aceptado (implementación pendiente para la semana "La nube a prueba")
 - **Fecha:** 25-nov-2026
